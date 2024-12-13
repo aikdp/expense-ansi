@@ -1,0 +1,89 @@
+#Creating BACKEND server using ANsible
+
+- name: Craeting backend/web server
+  hosts: backend
+  become: yes
+  vars:
+    root_pass: "ExpenseApp@1"
+    hosted_zone: "mysql.telugudevops.online"
+  tasks:
+    - name: ansible to install PyMySQL	#to connect mysql DB, need PyMySQL dependency
+      ansible.builtin.pip:
+        name: 
+        - PyMySQL
+        # - MySQL-python
+        - cryptography    
+        - boto3
+        - botocore
+        executable: pip3.9
+    - name: Install nodejs package
+      ansible.builtin.command: dnf module disable nodejs -y
+
+    - name: Install nodejs package
+      ansible.builtin.command: dnf module enable nodejs:20 -y
+
+    - name: install nodejs client
+      ansible.builtin.package:
+        name: nodejs
+        state: present
+
+    # - name: check user expense,if not create user
+    #   ansible.builtin.command: id expense
+    #   ignore_errors: true
+
+    - name: Create user expense
+      ansible.builtin.user:
+        name: expense
+
+    - name: Create app directory
+      ansible.builtin.file:
+        path: /app
+        state: directory
+       
+    - name: Download backend code
+      ansible.builtin.get_url:
+        url: https://expense-builds.s3.us-east-1.amazonaws.com/expense-backend-v2.zip
+        dest: /tmp/backend.zip
+
+    - name: Unarchive a file
+      ansible.builtin.unarchive:
+        src: /tmp/backend.zip
+        dest: /app
+        remote_src: yes
+
+    # - name: install npm dependecies
+    #   community.general.npm:
+    #     path: /app
+    - name: install npm dependencies
+      ansible.builtin.command: npm install
+      args:
+        chdir: /app
+
+    - name: Copy backend service file
+      ansible.builtin.copy:
+        src: backend.service
+        dest: /etc/systemd/system/backend.service
+
+    - name: install mysql client
+      ansible.builtin.package:
+        name: mysql
+        state: present
+
+    - name: Laod schema to backend.sql
+      community.mysql.mysql_db:
+        login_host: "{{ hosted_zone }}"
+        login_user: root
+        login_password: "{{ root_pass }}"
+        state: import
+        name: all
+        target: /app/schema/backend.sql
+
+    - name: Start service
+      ansible.builtin.systemd_service:
+        name: backend
+        state: restarted
+        enabled: true
+        daemon_reload: true
+
+    
+

@@ -1,0 +1,66 @@
+#Creating ec2-user in aws
+# Question: We need to create instances with below type of records:
+# mysql.telugudevops.online	--->private ip
+# backend.telugudevops.onlin  --->private ip
+# frontend.telugudevops.online	--->private ip
+# telugudevops.online	--->public ip
+
+
+- name: Crreate ec2 and R53 record
+  hosts: local
+  connection: local
+  vars:
+    domain: "telugudevops.online"
+    subnet_id: "subnet-02571795c888dda45"
+    sg_id: "sg-09805cbd3e2c45d5b"
+    ami_id: "ami-09c813fb71547fc4f"
+    instances:
+    - mysql
+    - backend
+    - frontend
+  tasks:
+    # - name: install boto3 and botocore
+    #   ansible.builtin.pip:
+    #   name:
+    #   - boto3
+    #   - botocore
+    #   executable: pip3.9
+    - name: Craete ec2 instance
+      amazon.aws.ec2_instance:
+        name: "{{ item }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        instance_type: 
+        security_group: "{{ sg_id }}"
+        image_id: "{{ ami_id }}"
+      loop: "{{ instances }}"
+      register: ec2_instances
+
+    - name: Print the ec2 instance info output
+      ansible.builtin.debug:
+        msg: "ec2 instance info output is {{ ec2_instances }}"
+
+    - name: Cretae route53 records
+      amazon.aws.route53:
+        state: present
+        zone: "{{ domain }}"
+        record: "{{ item.item }}.{{ domain }}"
+        type: A
+        ttl: 1
+        value: "{{ item.instances[0].private_ip_address }}"
+        wait: true
+        overwrite: true
+      loop: "{{ ec2_instances.results }}"
+     
+
+    - name: Cretae route53 for frontend # for telugudevops.online
+      amazon.aws.route53:
+        state: present
+        zone: "{{ domain }}"
+        record: "{{ domain }}"
+        type: A
+        ttl: 1
+        value: "{{ item.instances[0].public_ip_address }}"
+        wait: true
+        overwrite: true
+      loop: "{{ ec2_instances.results }}"
+      when: item.item == "frontend"

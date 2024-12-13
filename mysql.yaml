@@ -1,0 +1,45 @@
+#Create mysql server using ansible
+- name: Create mysql server
+  hosts: mysql
+  become: yes
+  #declaring variables
+  vars:
+    mysql_root_password: "ExpenseApp@1"
+    mysql_hosted_zone: "mysql.telugudevops.online"
+  tasks:
+    - name: ansible to install PyMySQL	#to connect mysql DB, need PyMySQL dependency
+      ansible.builtin.pip:
+        name: 
+        - PyMySQL
+        - cryptography    
+        - boto3
+        - botocore
+        executable: pip3.9
+      #installing mysql-server
+    - name: install mysql-server
+      ansible.builtin.package:
+        name: mysql-server
+        state: present
+      #Start and enableing service
+    - name: start and enable mysql service
+      ansible.builtin.service:
+        name: mysqld
+        state: started
+        enabled: yes
+      #check whether the root password is aleady exists or not-->for this we need to connect mysql server so need login and passwords
+    - name: collect mysql-server info
+      community.mysql.mysql_info:
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        login_host: "{{ mysql_hosted_zone }}"
+      ignore_errors: true
+      register: mysql_info
+
+    - name: print the mysql_info
+      ansible.builtin.debug:
+        msg: "print the {{ mysql_info }}"  
+
+    
+    - name: set up root password
+      ansible.builtin.command: "mysql_secure_installation --set-root-pass {{ mysql_root_password }}"
+      when: mysql_info.failed is true

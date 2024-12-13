@@ -1,0 +1,81 @@
+#Create Ec2 instances fro mysq, backend and frontend. create r53 records
+
+- name: Create ec2 instances and r53 reocrds
+  hosts: local
+  connection: local
+  vars:
+    subnet_id: "subnet-0e2f888f786957beb"
+    sg_group_id: "sg-09805cbd3e2c45d5b"
+    ami_id: "ami-09c813fb71547fc4f"
+    zone_name: "telugudevops.online"
+  tasks:
+    - name: Install boto3 and botocore for Python 3.9 specifically, using the 'pip3.9' executable
+      ansible.builtin.pip:
+        name: 
+        - boto3
+        - botocore
+        - PyMySQL
+        executable: pip3.9
+    - name: create ec2 instances
+      amazon.aws.ec2_instance:
+        name: "{{ item }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        instance_type: t3.micro
+        security_group: "{{ sg_group_id }}"
+        image_id: "{{ ami_id }}"
+      loop:
+      - mysql
+      - backend
+      - frontend
+      register: ec2_instances
+
+    - name: print out of ec2_instances
+      ansible.builtin.debug:
+        msg: print output of instances is {{ ec2_instances }}
+
+    - name: Create r53 reocrds only priviate Ips
+      amazon.aws.route53:
+        state: present
+        zone: "{{ zone_name }}"
+        record: "{{ item.item }}.{{ zone_name }}"
+        type: A
+        ttl: 1
+        value: "{{ item.instances[0].private_ip_address}}"
+        wait: true
+        overwrite: true
+      loop: "{{ ec2_instances.results}}"
+
+    # - name: Create r53 reocrds
+    #   amazon.aws.route53:
+    #     state: present
+    #     zone: "{{ zone_name }}"
+    #     record: "{{ item.instances.name}}.{{ zone_name }}"
+    #     type: A
+    #     ttl: 1
+    #     value: "{{ item.instances[0].private_ip_address}}"
+    #     wait: true
+    #     overwrite: true
+    #   loop: "{{ ec2_instances.results}}"
+    - name: Create r53 reocrds for frontend
+      amazon.aws.route53:
+        state: present
+        zone: "{{ zone_name }}"
+        record: "{{ zone_name }}"
+        type: A
+        ttl: 1
+        value: "{{ item.instances[0].public_ip_address}}"
+        wait: true
+        overwrite: true
+      loop: "{{ ec2_instances.results}}"
+      when: "item.item=='frontend'"
+
+#configure aws first, when run the code
+#Install ansible first, and also all libraries such as boto3, botocore etc
+#check local connection and add inventory file as well
+#Check indentations like loops, overwrite, and also quotes
+#have a good idae or read instance output carefull and write records code
+
+#RUN:   ansible-playbook -i inevntory.ini <file-name>
+
+
+
