@@ -34,7 +34,7 @@
         login_password: "{{ root_password }}"
         login_host: "{{ hosted_zone }}"
         config_file: ''
-        login_unix_socket: /run/mysqld/mysqld.sock
+        socket: /var/lib/mysql/mysql.sock
       ignore_errors: true
       register: mysql_info
 
