@@ -13,8 +13,8 @@
         - boto3
         - botocore
         - PyMySQL
-        # executable: pip3.9
-        executable: pip2.7
+        executable: pip3.9
+        # executable: pip2.7
 
     - name: install mysql sever
       ansible.builtin.package:
@@ -32,6 +32,7 @@
         login_user: root
         login_password: "{{ root_password }}"
         login_host: "{{ hosted_zone }}"
+        config_file: ''
       ignore_errors: true
       register: mysql_info
 
