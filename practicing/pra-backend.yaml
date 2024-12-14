@@ -75,6 +75,7 @@
         login_host: "{{ hosted_zone }}"
         login_user: root
         login_password: "{{ root_password }}"
+        login_unix_socket: /run/mysqld/mysqld.sock
         state: import
         name: all
         target: /app/schema/backend.sql
