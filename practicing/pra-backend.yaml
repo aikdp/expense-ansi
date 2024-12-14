@@ -4,7 +4,7 @@
   hosts: backend
   become: yes
   vars:
-    root_pass: "ExpenseApp@1"
+    root_password: "ExpenseApp@1"
     hosted_zone: "mysql.telugudevops.online"
   tasks:
     - name: ansible to install PyMySQL	#to connect mysql DB, need PyMySQL dependency
@@ -69,20 +69,21 @@
         name: mysql
         state: present
 
-    - name: Laod schema to backend.sql
+    - name: Load schema to backend.sql
       community.mysql.mysql_db:
         login_host: "{{ hosted_zone }}"
         login_user: root
-        login_password: "{{ root_pass }}"
+        login_password: "{{ root_password }}"
         state: import
         name: all
         target: /app/schema/backend.sql
+        config_file: ''
 
     - name: Start service
       ansible.builtin.systemd_service:
         name: backend
         state: restarted
-        enabled: true
+        # enabled: true
         daemon_reload: true
 
     
