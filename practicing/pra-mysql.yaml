@@ -13,7 +13,8 @@
         - boto3
         - botocore
         - PyMySQL
-        executable: pip3.9
+        # executable: pip3.9
+        executable: pip2.7
 
     - name: install mysql sever
       ansible.builtin.package:
