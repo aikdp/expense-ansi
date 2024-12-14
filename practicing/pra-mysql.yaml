@@ -13,6 +13,7 @@
         - boto3
         - botocore
         - PyMySQL
+        - cryptography
         executable: pip3.9
         # executable: pip2.7
 
