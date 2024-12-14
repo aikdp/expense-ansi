@@ -4,8 +4,8 @@
   hosts: mysql
   become: yes
   vars:
-    root_pass: ExpenseApp@1
-    hosted_zone: mysql.telugudevops.online
+    root_pass: "ExpenseApp@1"
+    hosted_zone: "mysql.telugudevops.online"
   tasks:
     - name: Install boto3 and botocore for Python 3.9 specifically, using the 'pip3.9' executable
       ansible.builtin.pip:

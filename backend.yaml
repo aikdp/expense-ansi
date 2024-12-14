@@ -6,7 +6,7 @@
 #     mysql_root_password: ExpenseApp@1
 #     login_host: mysql.telugudevops.online
 #   tasks:
-#     - name: ansible to install PyMySQL	#to connect mysql DB, need PyMySQL dependency
+    # - name: ansible to install PyMySQL	#to connect mysql DB, need PyMySQL dependency
 #       ansible.builtin.pip:
 #         name: 
 #         - PyMySQL
